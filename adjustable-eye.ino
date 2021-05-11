@@ -1,11 +1,11 @@
-#include <TVout.h>
+#include <ESP_8_BIT_GFX.h>
 
 #include "sclera_data_22x22.h"
 #include "iris_data_22x22.h"
 #include "iris_mask_data_22x22.h"
 
 
-TVout TV;
+ESP_8_BIT_GFX videoOut(true /* = NTSC */, 8 /* = RGB332 color */);
 
 // storage for image buffers
 static char image_data[22*((22+7)/8)];
@@ -165,10 +165,10 @@ void draw_eye(PBM& image,
       for (char r=0;r<n+gap;r++){
         for (char c=0;c<n+gap;c++){
           if (r && c){
-            TV.set_pixel(col*(n+gap)+c, row*(n+gap)+r,
+            videoOut.drawPixel(col*(n+gap)+c, row*(n+gap)+r,
                          image.get_pixel(row, col));
           } else {
-            TV.set_pixel(col*(n+gap)+c, row*(n+gap)+r, 0);
+            videoOut.drawPixel(col*(n+gap)+c, row*(n+gap)+r, 0);
           } 
         }
       } 
@@ -178,7 +178,7 @@ void draw_eye(PBM& image,
 
 
 void setup()  {
-  TV.begin(NTSC, 120, 96);
+  videoOut.begin();
 }
 
 
@@ -187,8 +187,6 @@ void loop() {
   // create structures for the working images
   PBM image(22, 22, image_data);
   PBM temp(22, 22, temp_data);
-
-  TV.clear_screen();
 
   // the parameters of the eye
   char horiz = 0;             // -4..+4
@@ -200,6 +198,9 @@ void loop() {
   while(1){
     for (int i=-4; i<=4; i++){
       for (int j=-4; j<=4; j++){
+        videoOut.waitForFrame();
+        videoOut.fillScreen(0);
+
         horiz = i;
         vert = j;
         pupil_size = abs(5-i)/2;
